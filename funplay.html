@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Snake Game 🐍</title>
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+      margin: 0;
+      color: white;
+      font-family: "Comic Sans MS", cursive, sans-serif;
+    }
+    h1 {
+      font-size: 40px;
+      margin-bottom: 10px;
+      text-shadow: 2px 2px 5px black;
+    }
+    canvas {
+      border: 4px solid white;
+      background: #111;
+      display: none;
+    }
+    #scorePanel {
+      margin: 10px;
+      font-size: 20px;
+      background: rgba(0,0,0,0.5);
+      padding: 8px 16px;
+      border-radius: 12px;
+    }
+    #controls {
+      margin-top: 15px;
+    }
+    button {
+      padding: 10px 25px;
+      margin: 5px;
+      border: none;
+      border-radius: 10px;
+      background: #ff4081;
+      color: white;
+      font-size: 18px;
+      cursor: pointer;
+      transition: 0.3s;
+      box-shadow: 2px 2px 8px black;
+    }
+    button:hover {
+      background: #f50057;
+      transform: scale(1.1);
+    }
+    #replayBtn {
+      display: none; /* Only visible after Game Over */
+    }
+  </style>
+</head>
+<body>
+  <h1>🐍 Snake in a Box 🍎</h1>
+  <div id="scorePanel">Score: 0</div>
+  <canvas id="gameCanvas" width="400" height="400"></canvas>
+
+  <div id="controls">
+    <button id="playBtn">▶ Play</button>
+    <button id="replayBtn">🔄 Replay</button>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+    const playBtn = document.getElementById("playBtn");
+    const replayBtn = document.getElementById("replayBtn");
+    const scorePanel = document.getElementById("scorePanel");
+
+    const box = 20;
+    let snake, food, score, d, game;
+
+    function initGame() {
+      snake = [{ x: 9 * box, y: 10 * box }];
+      food = {
+        x: Math.floor(Math.random() * 20) * box,
+        y: Math.floor(Math.random() * 20) * box
+      };
+      score = 0;
+      d = null;
+      updateScore();
+    }
+
+    document.addEventListener("keydown", direction);
+    function direction(event) {
+      if (event.key === "ArrowLeft" && d !== "RIGHT") d = "LEFT";
+      else if (event.key === "ArrowUp" && d !== "DOWN") d = "UP";
+      else if (event.key === "ArrowRight" && d !== "LEFT") d = "RIGHT";
+      else if (event.key === "ArrowDown" && d !== "UP") d = "DOWN";
+    }
+
+    function draw() {
+      ctx.fillStyle = "#111";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Draw snake 🟩
+      ctx.font = "18px Arial";
+      for (let i = 0; i < snake.length; i++) {
+        ctx.fillText(i === 0 ? "🐍" : "🟩", snake[i].x + 2, snake[i].y + 16);
+      }
+
+      // Draw food 🍎
+      ctx.fillText("🍎", food.x + 2, food.y + 16);
+
+      // Snake movement
+      let snakeX = snake[0].x;
+      let snakeY = snake[0].y;
+
+      if (d === "LEFT") snakeX -= box;
+      if (d === "UP") snakeY -= box;
+      if (d === "RIGHT") snakeX += box;
+      if (d === "DOWN") snakeY += box;
+
+      // Eat food
+      if (snakeX === food.x && snakeY === food.y) {
+        score++;
+        updateScore();
+        food = {
+          x: Math.floor(Math.random() * 20) * box,
+          y: Math.floor(Math.random() * 20) * box
+        };
+      } else {
+        snake.pop();
+      }
+
+      let newHead = { x: snakeX, y: snakeY };
+
+      // Game Over
+      if (
+        snakeX < 0 || snakeY < 0 ||
+        snakeX >= canvas.width || snakeY >= canvas.height ||
+        collision(newHead, snake)
+      ) {
+        clearInterval(game);
+        ctx.fillStyle = "red";
+        ctx.font = "30px Comic Sans MS";
+        ctx.fillText("💀 Game Over!", 100, 200);
+        replayBtn.style.display = "inline-block";
+        return;
+      }
+
+      snake.unshift(newHead);
+    }
+
+    function collision(head, array) {
+      for (let i = 0; i < array.length; i++) {
+        if (head.x === array[i].x && head.y === array[i].y) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    function updateScore() {
+      scorePanel.innerHTML = "Score: " + score + " ⭐";
+    }
+
+    function startGame() {
+      initGame();
+      canvas.style.display = "block";
+      playBtn.style.display = "none";
+      replayBtn.style.display = "none";
+      clearInterval(game);
+      game = setInterval(draw, 120);
+    }
+
+    playBtn.addEventListener("click", startGame);
+    replayBtn.addEventListener("click", startGame);
+  </script>
+</body>
+</html>
